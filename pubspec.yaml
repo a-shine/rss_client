@@ -36,6 +36,7 @@ dependencies:
   shared_preferences: ^2.5.3 # Local (key-value) storage
   go_router: ^16.2.4 # Declarative routing
   rss_dart: ^1.0.13 # RSS parsing
+  url_launcher: ^6.3.2 # Launch URL in browser
 
 dev_dependencies:
   flutter_test:

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../router/routes.dart';
 import '../view_models/home_feed_view_model.dart';
@@ -27,6 +28,20 @@ class _RssFeedScreenState extends State<RssFeedScreen> {
         context.read<HomeFeedViewModel>().loadAllFeeds();
       }
     });
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not open article: $url'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -231,15 +246,7 @@ class _RssFeedScreenState extends State<RssFeedScreen> {
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: item.link != null
-                        ? () {
-                            // TODO: Open link in browser
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Link: ${item.link}'),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
-                          }
+                        ? () => _launchUrl(item.link!)
                         : null,
                   ),
                 );
