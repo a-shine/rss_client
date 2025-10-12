@@ -37,6 +37,9 @@ dependencies:
   go_router: ^16.2.4 # Declarative routing
   rss_dart: ^1.0.13 # RSS parsing
   url_launcher: ^6.3.2 # Launch URL in browser
+  readability: ^0.2.2 # Extract article content
+  flutter_html: ^3.0.0 # Render HTML content
+  intl: ^0.20.2 # Date formatting
 
 dev_dependencies:
   flutter_test:

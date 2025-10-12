@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../data/repositories/article_repository/article_repository.dart';
 import '../data/repositories/feed_url_repository/feed_url_repository.dart';
 import '../data/repositories/rss_feed_repository/rss_feed_repository.dart';
-import '../data/services/feed_url_local_storage_service/feed_url_local_storage_service.dart';
+import '../domain/models/article.dart';
 import '../ui/home/view_models/home_feed_view_model.dart';
 import '../ui/home/widgets/rss_feed_screen.dart';
 import '../ui/manage_feeds/view_models/manage_feeds_view_model.dart';
 import '../ui/manage_feeds/widgets/manage_feeds_screen.dart';
+import '../ui/reader/widgets/article_reader_screen.dart';
 import 'routes.dart';
 
 GoRouter createRouter(BuildContext context) {
@@ -18,8 +20,8 @@ GoRouter createRouter(BuildContext context) {
         path: Routes.home,
         builder: (context, _) => ChangeNotifierProvider(
           create: (_) => HomeFeedViewModel(
-            context.read<RssFeedRepository>(),
-            context.read<FeedUrlLocalStorageService>(),
+            rssFeedRepository: context.read<RssFeedRepository>(),
+            articleRepository: context.read<ArticleRepository>(),
           ),
           child: const RssFeedScreen(),
         ),
@@ -31,6 +33,13 @@ GoRouter createRouter(BuildContext context) {
                   ManageFeedsViewModel(context.read<FeedUrlRepository>()),
               child: const ManageFeedsScreen(),
             ),
+          ),
+          GoRoute(
+            path: Routes.readerRelative,
+            builder: (context, state) {
+              final article = state.extra as Article;
+              return ArticleReaderScreen(article: article);
+            },
           ),
         ],
       ),

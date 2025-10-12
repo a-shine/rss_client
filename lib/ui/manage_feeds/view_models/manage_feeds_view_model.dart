@@ -1,71 +1,99 @@
 import 'package:flutter/foundation.dart';
+import 'package:rss_client/utils/command.dart';
 
 import '../../../data/repositories/feed_url_repository/feed_url_repository.dart';
 import '../../../domain/models/feed_url.dart';
+import '../../../utils/result.dart';
+
+class AddFeedForm {
+  const AddFeedForm({this.url = '', this.name = ''});
+
+  final String url;
+  final String name;
+}
 
 class ManageFeedsViewModel extends ChangeNotifier {
+  ManageFeedsViewModel(this._feedUrlRepository) {
+    load = Command0<void>(_load)..execute();
+    addFeed = Command1<void, AddFeedForm>(_addFeedUrl);
+    removeFeed = Command1<void, String>(_removeFeedUrl);
+  }
+
+  // Dependencies
   final FeedUrlRepository _feedUrlRepository;
 
-  ManageFeedsViewModel(this._feedUrlRepository);
+  // Commands
+  late Command0<void> load;
+  late Command1<void, AddFeedForm> addFeed;
+  late Command1<void, String> removeFeed;
 
-  List<FeedUrl> _feedUrls = [];
-  String? _error;
-
+  // State
+  final List<FeedUrl> _feedUrls = [];
   List<FeedUrl> get feedUrls => _feedUrls;
-  String? get error => _error;
 
   /// Load all feed URLs from storage
-  Future<void> loadFeedUrls() async {
-    try {
-      _feedUrls = await _feedUrlRepository.getFeedUrls();
-      notifyListeners();
-    } catch (e) {
-      print('Error loading feed URLs: $e');
-      _error = 'Failed to load feeds: $e';
-      notifyListeners();
+  Future<Result<void>> _load() async {
+    final result = await _feedUrlRepository.getFeedUrls();
+    switch (result) {
+      case Ok():
+        _feedUrls
+          ..clear()
+          ..addAll(result.value);
+        return Result.ok(null);
+      case Error():
+        return Result.error(result.error);
     }
   }
 
   /// Add a new feed URL
-  Future<bool> addFeedUrl(String url, String name) async {
+  Future<Result<void>> _addFeedUrl(AddFeedForm form) async {
     try {
-      // Check if URL already exists
-      if (await _feedUrlRepository.urlExists(url)) {
-        _error = 'This feed URL already exists';
-        notifyListeners();
-        return false;
-      }
+      // // Check if URL already exists
+      // if (await _feedUrlRepository.urlExists(form.url)) {
+      //   _error = 'This feed URL already exists';
+      //   notifyListeners();
+      //   return false;
+      // }
 
       final feedUrl = FeedUrl(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        url: url,
-        name: name,
+        url: form.url,
+        name: form.name,
       );
 
-      await _feedUrlRepository.addFeedUrl(feedUrl);
-      await loadFeedUrls();
+      final result = await _feedUrlRepository.addFeedUrl(feedUrl);
 
-      return true;
+      switch (result) {
+        case Error():
+          return Result.error(result.error);
+        case Ok():
+          break; // Continue to reload the list
+      }
+      await _load(); // Refresh the list
+
+      return Result.ok(null);
     } catch (e) {
-      _error = 'Failed to add feed: $e';
-      notifyListeners();
-      return false;
+      return Result.error(Exception('Failed to add feed URL: $e'));
     }
   }
 
   /// Remove a feed URL
-  Future<void> removeFeedUrl(String id) async {
+  Future<Result<void>> _removeFeedUrl(String id) async {
     try {
-      await _feedUrlRepository.removeFeedUrl(id);
-      await loadFeedUrls();
-    } catch (e) {
-      _error = 'Failed to remove feed: $e';
-      notifyListeners();
-    }
-  }
+      final result = await _feedUrlRepository.removeFeedUrl(id);
 
-  void clearError() {
-    _error = null;
-    notifyListeners();
+      switch (result) {
+        case Error():
+          return Result.error(
+            Exception('Failed to remove feed URL: ${result.error}'),
+          );
+        case Ok():
+          break; // Continue to reload the list
+      }
+      await _load(); // Refresh the list
+      return Result.ok(null);
+    } catch (e) {
+      return Result.error(Exception('Failed to remove feed URL: $e'));
+    }
   }
 }

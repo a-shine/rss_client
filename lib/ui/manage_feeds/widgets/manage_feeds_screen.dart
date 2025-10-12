@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../view_models/manage_feeds_view_model.dart';
@@ -12,14 +13,7 @@ class ManageFeedsScreen extends StatefulWidget {
 }
 
 class _ManageFeedsScreenState extends State<ManageFeedsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Load feed URLs when screen is first created
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ManageFeedsViewModel>().loadFeedUrls();
-    });
-  }
+  late final _viewModel = context.read<ManageFeedsViewModel>();
 
   @override
   Widget build(BuildContext context) {
@@ -28,9 +22,10 @@ class _ManageFeedsScreenState extends State<ManageFeedsScreen> {
         title: const Text('Manage Feeds'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: Consumer<ManageFeedsViewModel>(
-        builder: (context, viewModel, child) {
-          final feedUrls = viewModel.feedUrls;
+      body: ListenableBuilder(
+        listenable: _viewModel.load,
+        builder: (context, _) {
+          final feedUrls = _viewModel.feedUrls;
 
           if (feedUrls.isEmpty) {
             return Center(
@@ -69,33 +64,49 @@ class _ManageFeedsScreenState extends State<ManageFeedsScreen> {
                   ),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete),
-                    onPressed: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Remove Feed'),
-                          content: Text(
-                            'Are you sure you want to remove "${feedUrl.name}"?',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text('Cancel'),
+                    onPressed: () => showDialog<bool>(
+                      context: context,
+                      builder: (context) => ListenableBuilder(
+                        listenable: _viewModel.removeFeed,
+                        builder: (context, _) {
+                          return AlertDialog(
+                            title: const Text('Remove Feed'),
+                            content: Text(
+                              'Are you sure you want to remove "${feedUrl.name}"?',
                             ),
-                            ElevatedButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: const Text('Remove'),
-                            ),
-                          ],
-                        ),
-                      );
-
-                      if (confirm == true && context.mounted) {
-                        await context
-                            .read<ManageFeedsViewModel>()
-                            .removeFeedUrl(feedUrl.id);
-                      }
-                    },
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton(
+                                onPressed: _viewModel.removeFeed.running
+                                    ? null
+                                    : () async {
+                                        // Execute removal
+                                        await _viewModel.removeFeed.execute(
+                                          feedUrl.id,
+                                        );
+                                        if (context.mounted) {
+                                          context.pop();
+                                        }
+                                      },
+                                child: _viewModel.removeFeed.running
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Text('Remove'),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
               );
@@ -104,38 +115,10 @@ class _ManageFeedsScreenState extends State<ManageFeedsScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await showDialog<Map<String, String>>(
-            context: context,
-            builder: (context) => const AddFeedDialog(),
-          );
-
-          if (result != null && context.mounted) {
-            final success = await context
-                .read<ManageFeedsViewModel>()
-                .addFeedUrl(result['url']!, result['name']!);
-
-            if (context.mounted) {
-              if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Feed added successfully'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } else {
-                final error = context.read<ManageFeedsViewModel>().error;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(error ?? 'Failed to add feed'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                context.read<ManageFeedsViewModel>().clearError();
-              }
-            }
-          }
-        },
+        onPressed: () => showDialog<Map<String, String>>(
+          context: context,
+          builder: (context) => const AddFeedDialog(),
+        ),
         child: const Icon(Icons.add),
       ),
     );
