@@ -31,6 +31,17 @@ class _RssFeedScreenState extends State<RssFeedScreen> {
     super.dispose();
   }
 
+  bool _isYoutubeUrl(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return false;
+
+    final host = uri.host.toLowerCase();
+    return host == 'youtube.com' ||
+        host == 'www.youtube.com' ||
+        host == 'youtu.be' ||
+        host == 'm.youtube.com';
+  }
+
   void _onParseArticle() {
     if (_viewModel.parseArticle.error) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -93,6 +104,10 @@ class _RssFeedScreenState extends State<RssFeedScreen> {
 
     // Start parsing the article
     _viewModel.parseArticle.execute(url);
+  }
+
+  void _openVideoPlayer(String url, String title) {
+    context.go(Routes.videoPlayer, extra: {'url': url, 'title': title});
   }
 
   @override
@@ -297,12 +312,26 @@ class _RssFeedScreenState extends State<RssFeedScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              TextButton.icon(
-                                onPressed: () => _openInReaderMode(item.link!),
-                                icon: const Icon(Icons.article, size: 18),
-                                label: const Text('Reader'),
-                              ),
-                              const SizedBox(width: 8),
+                              // Show video player button for YouTube links
+                              if (_isYoutubeUrl(item.link!)) ...[
+                                TextButton.icon(
+                                  onPressed: () =>
+                                      _openVideoPlayer(item.link!, item.title),
+                                  icon: const Icon(Icons.play_circle, size: 18),
+                                  label: const Text('Play Video'),
+                                ),
+                                const SizedBox(width: 8),
+                              ]
+                              // Show reader button for non-YouTube links
+                              else ...[
+                                TextButton.icon(
+                                  onPressed: () =>
+                                      _openInReaderMode(item.link!),
+                                  icon: const Icon(Icons.article, size: 18),
+                                  label: const Text('Reader'),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
                               TextButton.icon(
                                 onPressed: () => _launchUrl(item.link!),
                                 icon: const Icon(

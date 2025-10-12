@@ -11,6 +11,7 @@ import '../ui/home/widgets/rss_feed_screen.dart';
 import '../ui/manage_feeds/view_models/manage_feeds_view_model.dart';
 import '../ui/manage_feeds/widgets/manage_feeds_screen.dart';
 import '../ui/reader/widgets/article_reader_screen.dart';
+import '../ui/video_player/widgets/youtube_player_screen.dart';
 import 'routes.dart';
 
 GoRouter createRouter(BuildContext context) {
@@ -39,6 +40,16 @@ GoRouter createRouter(BuildContext context) {
             builder: (context, state) {
               final article = state.extra as Article;
               return ArticleReaderScreen(article: article);
+            },
+          ),
+          GoRoute(
+            path: Routes.videoPlayerRelative,
+            builder: (context, state) {
+              final data = state.extra as Map<String, String>;
+              return YoutubePlayerScreen(
+                videoUrl: data['url']!,
+                title: data['title']!,
+              );
             },
           ),
         ],
