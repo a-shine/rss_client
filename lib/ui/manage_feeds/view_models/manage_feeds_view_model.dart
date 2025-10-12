@@ -1,12 +1,12 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../data/services/feed_url_local_storage_service/feed_url_local_storage_service.dart';
+import '../../../data/repositories/feed_url_repository/feed_url_repository.dart';
 import '../../../domain/models/feed_url.dart';
 
 class ManageFeedsViewModel extends ChangeNotifier {
-  final FeedUrlLocalStorageService _feedUrlService;
+  final FeedUrlRepository _feedUrlRepository;
 
-  ManageFeedsViewModel(this._feedUrlService);
+  ManageFeedsViewModel(this._feedUrlRepository);
 
   List<FeedUrl> _feedUrls = [];
   String? _error;
@@ -17,7 +17,7 @@ class ManageFeedsViewModel extends ChangeNotifier {
   /// Load all feed URLs from storage
   Future<void> loadFeedUrls() async {
     try {
-      _feedUrls = await _feedUrlService.getFeedUrls();
+      _feedUrls = await _feedUrlRepository.getFeedUrls();
       notifyListeners();
     } catch (e) {
       print('Error loading feed URLs: $e');
@@ -30,7 +30,7 @@ class ManageFeedsViewModel extends ChangeNotifier {
   Future<bool> addFeedUrl(String url, String name) async {
     try {
       // Check if URL already exists
-      if (await _feedUrlService.urlExists(url)) {
+      if (await _feedUrlRepository.urlExists(url)) {
         _error = 'This feed URL already exists';
         notifyListeners();
         return false;
@@ -42,7 +42,7 @@ class ManageFeedsViewModel extends ChangeNotifier {
         name: name,
       );
 
-      await _feedUrlService.addFeedUrl(feedUrl);
+      await _feedUrlRepository.addFeedUrl(feedUrl);
       await loadFeedUrls();
 
       return true;
@@ -56,7 +56,7 @@ class ManageFeedsViewModel extends ChangeNotifier {
   /// Remove a feed URL
   Future<void> removeFeedUrl(String id) async {
     try {
-      await _feedUrlService.removeFeedUrl(id);
+      await _feedUrlRepository.removeFeedUrl(id);
       await loadFeedUrls();
     } catch (e) {
       _error = 'Failed to remove feed: $e';

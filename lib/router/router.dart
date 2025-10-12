@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../data/repositories/feed_url_repository/feed_url_repository.dart';
 import '../data/repositories/rss_feed_repository/rss_feed_repository.dart';
 import '../data/services/feed_url_local_storage_service/feed_url_local_storage_service.dart';
 import '../ui/home/view_models/home_feed_view_model.dart';
@@ -26,9 +27,8 @@ GoRouter createRouter(BuildContext context) {
           GoRoute(
             path: Routes.manageFeedsRelative,
             builder: (context, _) => ChangeNotifierProvider(
-              create: (_) => ManageFeedsViewModel(
-                context.read<FeedUrlLocalStorageService>(),
-              ),
+              create: (_) =>
+                  ManageFeedsViewModel(context.read<FeedUrlRepository>()),
               child: const ManageFeedsScreen(),
             ),
           ),
