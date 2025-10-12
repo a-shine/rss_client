@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
 import '../view_models/manage_feeds_view_model.dart';
 
 class AddFeedDialog extends StatefulWidget {
-  const AddFeedDialog({super.key});
+  const AddFeedDialog({super.key, required this.viewModel});
+
+  final ManageFeedsViewModel viewModel;
 
   @override
   State<AddFeedDialog> createState() => _AddFeedDialogState();
 }
 
 class _AddFeedDialogState extends State<AddFeedDialog> {
-  late final _viewModel = context.read<ManageFeedsViewModel>();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _urlController = TextEditingController();
@@ -20,7 +20,7 @@ class _AddFeedDialogState extends State<AddFeedDialog> {
   @override
   void initState() {
     super.initState();
-    _viewModel.addFeed.addListener(_onAddFeed);
+    widget.viewModel.addFeed.addListener(_onAddFeed);
   }
 
   @override
@@ -31,7 +31,7 @@ class _AddFeedDialogState extends State<AddFeedDialog> {
   }
 
   void _onAddFeed() {
-    if (_viewModel.addFeed.completed) {
+    if (widget.viewModel.addFeed.completed) {
       // Close the dialog on successful addition
       context.pop();
     }
@@ -40,7 +40,7 @@ class _AddFeedDialogState extends State<AddFeedDialog> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: _viewModel.addFeed,
+      listenable: widget.viewModel.addFeed,
       builder: (context, _) {
         return AlertDialog(
           title: const Text('Add RSS Feed'),
@@ -96,7 +96,7 @@ class _AddFeedDialogState extends State<AddFeedDialog> {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 // Show error message if any
-                if (_viewModel.addFeed.error) ...[
+                if (widget.viewModel.addFeed.error) ...[
                   const SizedBox(height: 8),
                   Text(
                     "Failed to add feed. Please try again.",
@@ -114,18 +114,18 @@ class _AddFeedDialogState extends State<AddFeedDialog> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: _viewModel.addFeed.running
+              onPressed: widget.viewModel.addFeed.running
                   ? null
                   : () {
                       if (_formKey.currentState?.validate() ?? false) {
                         final name = _nameController.text.trim();
                         final url = _urlController.text.trim();
-                        _viewModel.addFeed.execute(
+                        widget.viewModel.addFeed.execute(
                           AddFeedForm(name: name, url: url),
                         );
                       }
                     },
-              child: _viewModel.addFeed.running
+              child: widget.viewModel.addFeed.running
                   ? const SizedBox(
                       width: 16,
                       height: 16,

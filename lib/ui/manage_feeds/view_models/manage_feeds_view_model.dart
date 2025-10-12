@@ -69,8 +69,7 @@ class ManageFeedsViewModel extends ChangeNotifier {
         case Ok():
           break; // Continue to reload the list
       }
-      await _load(); // Refresh the list
-
+      load.execute(); // Refresh the list
       return Result.ok(null);
     } catch (e) {
       return Result.error(Exception('Failed to add feed URL: $e'));
@@ -90,7 +89,7 @@ class ManageFeedsViewModel extends ChangeNotifier {
         case Ok():
           break; // Continue to reload the list
       }
-      await _load(); // Refresh the list
+      load.execute(); // Refresh the list
       return Result.ok(null);
     } catch (e) {
       return Result.error(Exception('Failed to remove feed URL: $e'));

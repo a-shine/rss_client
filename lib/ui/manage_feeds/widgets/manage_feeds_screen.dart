@@ -117,7 +117,7 @@ class _ManageFeedsScreenState extends State<ManageFeedsScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => showDialog<Map<String, String>>(
           context: context,
-          builder: (context) => const AddFeedDialog(),
+          builder: (context) => AddFeedDialog(viewModel: _viewModel),
         ),
         child: const Icon(Icons.add),
       ),
