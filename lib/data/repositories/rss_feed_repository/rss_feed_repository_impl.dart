@@ -53,41 +53,78 @@ class RssFeedRepositoryImpl implements RssFeedRepository {
   @override
   Future<Result<Feed>> fetchFeedByUrl(FeedUrl feedUrl) async {
     try {
-      final rssFeedResult = await _service.fetchRssFeed(feedUrl.url);
+      final feedResult = await _service.fetchFeed(feedUrl.url);
 
-      switch (rssFeedResult) {
+      switch (feedResult) {
         case Error():
-          return Result.error(rssFeedResult.error);
+          return Result.error(feedResult.error);
         case Ok():
-          final rssFeed = rssFeedResult.value;
+          final feed = feedResult.value;
 
-          // Map service model (RssFeed) to domain model (Feed)
-          final items = rssFeed.items.map((item) {
-            DateTime? pubDate;
-            if (item.pubDate != null) {
-              try {
-                pubDate = DateTime.parse(item.pubDate!);
-              } catch (e) {
-                pubDate = null;
+          // Handle RSS feed
+          if (feed.rssFeed != null) {
+            final rssFeed = feed.rssFeed!;
+            final items = rssFeed.items.map((item) {
+              DateTime? pubDate;
+              if (item.pubDate != null) {
+                try {
+                  pubDate = DateTime.parse(item.pubDate!);
+                } catch (e) {
+                  pubDate = null;
+                }
               }
-            }
 
-            return FeedItem(
-              title: item.title ?? 'No Title',
-              description: item.description,
-              link: item.link,
-              pubDate: pubDate,
+              return FeedItem(
+                title: item.title ?? 'No Title',
+                description: item.description,
+                link: item.link,
+                pubDate: pubDate,
+              );
+            }).toList();
+
+            return Result.ok(
+              Feed(
+                feedUrlId: feedUrl.id,
+                title: rssFeed.title ?? feedUrl.name,
+                description: rssFeed.description,
+                items: items,
+              ),
             );
-          }).toList();
+          }
+          // Handle Atom feed
+          else if (feed.atomFeed != null) {
+            final atomFeed = feed.atomFeed!;
+            final items = atomFeed.items.map((item) {
+              DateTime? pubDate;
+              if (item.updated != null) {
+                try {
+                  pubDate = DateTime.parse(item.updated!);
+                } catch (e) {
+                  pubDate = null;
+                }
+              }
 
-          return Result.ok(
-            Feed(
-              feedUrlId: feedUrl.id,
-              title: rssFeed.title ?? feedUrl.name,
-              description: rssFeed.description,
-              items: items,
-            ),
-          );
+              return FeedItem(
+                title: item.title ?? 'No Title',
+                description: item.summary ?? item.content,
+                link: item.links.isNotEmpty ? item.links.first.href : null,
+                pubDate: pubDate,
+              );
+            }).toList();
+
+            return Result.ok(
+              Feed(
+                feedUrlId: feedUrl.id,
+                title: atomFeed.title ?? feedUrl.name,
+                description: atomFeed.subtitle,
+                items: items,
+              ),
+            );
+          } else {
+            return Result.error(
+              Exception('Feed contains neither RSS nor Atom data'),
+            );
+          }
       }
     } catch (e) {
       return Result.error(Exception('Failed to fetch feed by URL: $e'));
