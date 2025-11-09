@@ -1,23 +1,16 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:readability/article.dart';
-import 'package:readability/readability.dart' as readability;
-
 import '../../../utils/result.dart';
+// Conditional imports: use different implementations based on platform
+// The Article class is exported from the platform-specific implementations
+import 'article_reader_service_stub.dart'
+    if (dart.library.io) 'article_reader_service_io.dart'
+    if (dart.library.html) 'article_reader_service_web.dart';
 
 class ArticleReaderService {
-  /// Fetch and parse article content from a URL
-  Future<Result<Article>> fetchArticle(String url) async {
-    try {
-      // Use the readability package which fetches and parses in one call
-      // Note: This works on mobile/desktop but not on web
-      if (kIsWeb) {
-        throw Exception('Reader mode is not supported on web platform');
-      }
+  final ArticleReaderServiceImpl _impl = ArticleReaderServiceImpl();
 
-      final article = await readability.parseAsync(url);
-      return Result.ok(article);
-    } catch (e) {
-      return Result.error(Exception('Failed to fetch and parse article: $e'));
-    }
+  /// Fetch and parse article content from a URL
+  /// On web platform, this will return an error since readability is not supported
+  Future<Result<Article>> fetchArticle(String url) async {
+    return _impl.fetchArticle(url);
   }
 }
