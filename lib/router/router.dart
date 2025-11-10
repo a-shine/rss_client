@@ -17,14 +17,11 @@ import '../ui/sign_in/widgets/sign_in_screen.dart';
 import '../ui/video_player/widgets/youtube_player_screen.dart';
 import 'routes.dart';
 
-GoRouter createRouter(
-  UserRepository userRepository,
-  AuthStateNotifier authStateNotifier,
-) {
+GoRouter createRouter(AuthStateNotifier authStateNotifier) {
   return GoRouter(
     initialLocation: Routes.home,
     redirect: (context, state) async {
-      final user = await userRepository.getCurrentUser();
+      final user = await authStateNotifier.currentUser;
       final isSignInRoute = state.matchedLocation == Routes.signIn;
 
       // If user is not authenticated and not on sign-in page, redirect to sign-in

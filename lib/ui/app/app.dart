@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rss_client/domain/models/user.dart';
 
 import '../../data/repositories/user_repository/user_repository.dart';
 import '../../router/router.dart';
@@ -23,10 +24,7 @@ class MyApp extends StatelessWidget {
               ),
               useMaterial3: true,
             ),
-            routerConfig: createRouter(
-              context.read<UserRepository>(),
-              context.read<AuthStateNotifier>(),
-            ),
+            routerConfig: createRouter(context.read<AuthStateNotifier>()),
           );
         },
       ),
@@ -45,6 +43,10 @@ class AuthStateNotifier extends ChangeNotifier {
 
   final UserRepository _userRepository;
   StreamSubscription? _subscription;
+
+  Future<User?> get currentUser async {
+    return await _userRepository.getCurrentUser();
+  }
 
   @override
   void dispose() {
