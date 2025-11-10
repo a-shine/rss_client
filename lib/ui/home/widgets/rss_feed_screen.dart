@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../data/repositories/user_repository/user_repository.dart';
 import '../../../domain/models/article.dart';
 import '../../../router/routes.dart';
 import '../../../utils/result.dart';
@@ -124,6 +125,28 @@ class _RssFeedScreenState extends State<RssFeedScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => _viewModel.load.execute(),
+          ),
+          PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value == 'signout') {
+                await context.read<UserRepository>().signOut();
+                if (mounted) {
+                  context.go(Routes.signIn);
+                }
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'signout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout),
+                    SizedBox(width: 8),
+                    Text('Sign Out'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

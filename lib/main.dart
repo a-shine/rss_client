@@ -12,10 +12,13 @@ import 'data/repositories/feed_url_repository/feed_url_repository.dart';
 import 'data/repositories/feed_url_repository/feed_url_repository_impl.dart';
 import 'data/repositories/rss_feed_repository/rss_feed_repository.dart';
 import 'data/repositories/rss_feed_repository/rss_feed_repository_impl.dart';
+import 'data/repositories/user_repository/user_repository.dart';
+import 'data/repositories/user_repository/user_repository_impl.dart';
 import 'data/services/article_reader_service/article_reader_service.dart';
 import 'data/services/feed_url_local_storage_service/feed_url_local_storage_service.dart';
 import 'data/services/local_sqllite_service/local_sqllite_service.dart';
 import 'data/services/rss_feed_http_service/rss_feed_http_service.dart';
+import 'data/services/supabase_auth_service/supabase_auth_service.dart';
 import 'ui/app/app.dart';
 
 const supabaseUrl = 'https://rkwdlmvitmapcbqzkcov.supabase.co';
@@ -47,6 +50,8 @@ void main() async {
 
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
 
+  final supabaseClient = Supabase.instance.client;
+
   runApp(
     MultiProvider(
       providers: [
@@ -59,6 +64,9 @@ void main() async {
         ),
         Provider<ArticleReaderService>(create: (_) => ArticleReaderService()),
         Provider<LocalSqlliteService>(create: (_) => LocalSqlliteService(db)),
+        Provider<SupabaseAuthService>(
+          create: (_) => SupabaseAuthService(supabaseClient),
+        ),
 
         // Repository layer (maps service models to domain models)
         Provider<FeedUrlRepository>(
@@ -75,6 +83,10 @@ void main() async {
           create: (context) => ArticleRepository(
             articleParserService: context.read<ArticleReaderService>(),
           ),
+        ),
+        Provider<UserRepository>(
+          create: (context) =>
+              UserRepositoryImpl(context.read<SupabaseAuthService>()),
         ),
       ],
       child: const MyApp(),
