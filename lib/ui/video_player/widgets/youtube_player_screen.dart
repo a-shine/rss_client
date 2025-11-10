@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 class YoutubePlayerScreen extends StatefulWidget {
   final String videoUrl;
@@ -18,54 +17,48 @@ class YoutubePlayerScreen extends StatefulWidget {
 
 class _YoutubePlayerScreenState extends State<YoutubePlayerScreen> {
   late YoutubePlayerController _controller;
-  bool _isPlayerReady = false;
 
   @override
   void initState() {
     super.initState();
 
     // Extract video ID from URL
-    final videoId = YoutubePlayer.convertUrlToId(widget.videoUrl);
+    final videoId = YoutubePlayerController.convertUrlToId(widget.videoUrl);
 
     if (videoId == null) {
       // Invalid YouTube URL
       return;
     }
 
-    _controller = YoutubePlayerController(
-      initialVideoId: videoId,
-      flags: const YoutubePlayerFlags(
-        autoPlay: true,
+    _controller = YoutubePlayerController.fromVideoId(
+      videoId: videoId,
+      autoPlay: true,
+      params: const YoutubePlayerParams(
         mute: false,
+        showControls: true,
+        showFullscreenButton: true,
         enableCaption: true,
-        controlsVisibleAtStart: true,
+        origin: 'https://www.youtube-nocookie.com',
       ),
-    )..addListener(_listener);
-  }
-
-  void _listener() {
-    if (_isPlayerReady && mounted && !_controller.value.isFullScreen) {
-      setState(() {});
-    }
+    );
   }
 
   @override
   void deactivate() {
     // Pause video when leaving the screen
-    _controller.pause();
+    _controller.pauseVideo();
     super.deactivate();
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_listener);
-    _controller.dispose();
+    _controller.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final videoId = YoutubePlayer.convertUrlToId(widget.videoUrl);
+    final videoId = YoutubePlayerController.convertUrlToId(widget.videoUrl);
 
     if (videoId == null) {
       return Scaffold(
@@ -88,27 +81,9 @@ class _YoutubePlayerScreenState extends State<YoutubePlayerScreen> {
       );
     }
 
-    return YoutubePlayerBuilder(
-      onExitFullScreen: () {
-        // Reset device orientation when exiting fullscreen
-        SystemChrome.setPreferredOrientations([
-          DeviceOrientation.portraitUp,
-          DeviceOrientation.portraitDown,
-          DeviceOrientation.landscapeLeft,
-          DeviceOrientation.landscapeRight,
-        ]);
-      },
-      player: YoutubePlayer(
-        controller: _controller,
-        showVideoProgressIndicator: true,
-        progressIndicatorColor: Colors.red,
-        onReady: () {
-          _isPlayerReady = true;
-        },
-        onEnded: (data) {
-          // Optional: Handle when video ends
-        },
-      ),
+    return YoutubePlayerScaffold(
+      controller: _controller,
+      aspectRatio: 16 / 9,
       builder: (context, player) {
         return Scaffold(
           appBar: AppBar(
@@ -136,22 +111,27 @@ class _YoutubePlayerScreenState extends State<YoutubePlayerScreen> {
                       ),
                       const SizedBox(height: 16),
                       // Player controls info
-                      if (_controller.value.isPlaying)
-                        const Row(
-                          children: [
-                            Icon(Icons.play_arrow, size: 16),
-                            SizedBox(width: 4),
-                            Text('Playing'),
-                          ],
-                        )
-                      else
-                        const Row(
-                          children: [
-                            Icon(Icons.pause, size: 16),
-                            SizedBox(width: 4),
-                            Text('Paused'),
-                          ],
-                        ),
+                      YoutubeValueBuilder(
+                        controller: _controller,
+                        builder: (context, value) {
+                          return Row(
+                            children: [
+                              Icon(
+                                value.playerState == PlayerState.playing
+                                    ? Icons.play_arrow
+                                    : Icons.pause,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                value.playerState == PlayerState.playing
+                                    ? 'Playing'
+                                    : 'Paused',
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
