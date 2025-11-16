@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../utils/result.dart';
 import '../view_models/manage_feeds_view_model.dart';
 import 'add_feed_dialog.dart';
 
@@ -21,6 +22,53 @@ class _ManageFeedsScreenState extends State<ManageFeedsScreen> {
       appBar: AppBar(
         title: const Text('Manage Feeds'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          ListenableBuilder(
+            listenable: _viewModel.syncFeeds,
+            builder: (context, _) {
+              return IconButton(
+                icon: _viewModel.syncFeeds.running
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.sync),
+                onPressed: _viewModel.syncFeeds.running
+                    ? null
+                    : () async {
+                        await _viewModel.syncFeeds.execute();
+
+                        if (context.mounted) {
+                          final result = _viewModel.syncFeeds.result;
+                          if (result != null) {
+                            switch (result) {
+                              case Ok():
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(result.value),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              case Error():
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(result.error.toString()),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                            }
+                          }
+                        }
+                      },
+                tooltip: 'Sync with Supabase',
+              );
+            },
+          ),
+        ],
       ),
       body: ListenableBuilder(
         listenable: _viewModel.load,

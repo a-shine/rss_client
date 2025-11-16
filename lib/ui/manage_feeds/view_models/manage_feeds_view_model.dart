@@ -3,6 +3,7 @@ import 'package:rss_client/utils/command.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../data/repositories/feed_url_repository/feed_url_repository.dart';
+import '../../../data/repositories/feed_url_repository/feed_url_repository_synced_impl.dart';
 import '../../../domain/models/feed_url.dart';
 import '../../../utils/result.dart';
 
@@ -18,6 +19,7 @@ class ManageFeedsViewModel extends ChangeNotifier {
     load = Command0<void>(_load)..execute();
     addFeed = Command1<void, AddFeedForm>(_addFeedUrl);
     removeFeed = Command1<void, String>(_removeFeedUrl);
+    syncFeeds = Command0<String>(_syncFeeds);
   }
 
   // Dependencies
@@ -27,6 +29,7 @@ class ManageFeedsViewModel extends ChangeNotifier {
   late Command0<void> load;
   late Command1<void, AddFeedForm> addFeed;
   late Command1<void, String> removeFeed;
+  late Command0<String> syncFeeds;
 
   // State
   final List<FeedUrl> _feedUrls = [];
@@ -58,7 +61,7 @@ class ManageFeedsViewModel extends ChangeNotifier {
         );
       case Ok():
         if (existsResult.value) {
-          return Result.ok(Exception('This feed URL already exists'));
+          return Result.error(Exception('This feed URL already exists'));
         }
     }
 
@@ -97,6 +100,32 @@ class ManageFeedsViewModel extends ChangeNotifier {
       return Result.ok(null);
     } catch (e) {
       return Result.error(Exception('Failed to remove feed URL: $e'));
+    }
+  }
+
+  /// Sync feeds from local SQLite to Supabase
+  Future<Result<String>> _syncFeeds() async {
+    try {
+      // Check if the repository supports syncing
+      if (_feedUrlRepository is! FeedUrlRepositorySyncedImpl) {
+        return Result.error(
+          Exception('Sync is not supported with current configuration'),
+        );
+      }
+
+      // ignore: unnecessary_cast
+      final syncedRepo = _feedUrlRepository as FeedUrlRepositorySyncedImpl;
+      final result = await syncedRepo.syncToSupabase();
+
+      switch (result) {
+        case Error():
+          return Result.error(result.error);
+        case Ok():
+          load.execute(); // Refresh the list after sync
+          return Result.ok(result.value.message);
+      }
+    } catch (e) {
+      return Result.error(Exception('Failed to sync feeds: $e'));
     }
   }
 }

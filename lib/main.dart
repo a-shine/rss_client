@@ -8,7 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'data/repositories/article_repository/article_repository.dart';
 import 'data/repositories/feed_url_repository/feed_url_repository.dart';
-import 'data/repositories/feed_url_repository/feed_url_repository_sql_impl.dart';
+import 'data/repositories/feed_url_repository/feed_url_repository_synced_impl.dart';
 import 'data/repositories/rss_feed_repository/rss_feed_repository.dart';
 import 'data/repositories/rss_feed_repository/rss_feed_repository_impl.dart';
 import 'data/repositories/user_repository/user_repository.dart';
@@ -18,6 +18,7 @@ import 'data/services/local_sqllite_service/local_sqllite_service.dart';
 import 'data/services/local_sqllite_service/models/feed_url_sql_model.dart';
 import 'data/services/rss_feed_http_service/rss_feed_http_service.dart';
 import 'data/services/supabase_auth_service/supabase_auth_service.dart';
+import 'data/services/supabase_postgres_service/supabase_postgres_service.dart';
 import 'ui/app/app.dart';
 
 const supabaseUrl = 'https://rkwdlmvitmapcbqzkcov.supabase.co';
@@ -58,11 +59,17 @@ void main() async {
         Provider<SupabaseAuthService>(
           create: (_) => SupabaseAuthService(supabaseClient),
         ),
+        Provider<SupabasePostgresService>(
+          create: (_) => SupabasePostgresService(supabaseClient),
+        ),
 
         // Repository layer (maps service models to domain models)
         Provider<FeedUrlRepository>(
-          create: (context) =>
-              FeedUrlRepositorySqlImpl(context.read<LocalSqlliteService>()),
+          create: (context) => FeedUrlRepositorySyncedImpl(
+            localService: context.read<LocalSqlliteService>(),
+            supabaseService: context.read<SupabasePostgresService>(),
+            supabaseClient: supabaseClient,
+          ),
         ),
         Provider<RssFeedRepository>(
           create: (context) => RssFeedRepositoryImpl(
