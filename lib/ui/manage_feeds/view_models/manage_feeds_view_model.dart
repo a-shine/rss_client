@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:rss_client/utils/command.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../data/repositories/feed_url_repository/feed_url_repository.dart';
 import '../../../domain/models/feed_url.dart';
@@ -47,33 +48,36 @@ class ManageFeedsViewModel extends ChangeNotifier {
 
   /// Add a new feed URL
   Future<Result<void>> _addFeedUrl(AddFeedForm form) async {
-    try {
-      // // Check if URL already exists
-      // if (await _feedUrlRepository.urlExists(form.url)) {
-      //   _error = 'This feed URL already exists';
-      //   notifyListeners();
-      //   return false;
-      // }
+    // Check if URL already exists
+    final existsResult = await _feedUrlRepository.urlExists(form.url);
 
-      final feedUrl = FeedUrl(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        url: form.url,
-        name: form.name,
-      );
-
-      final result = await _feedUrlRepository.addFeedUrl(feedUrl);
-
-      switch (result) {
-        case Error():
-          return Result.error(result.error);
-        case Ok():
-          break; // Continue to reload the list
-      }
-      load.execute(); // Refresh the list
-      return Result.ok(null);
-    } catch (e) {
-      return Result.error(Exception('Failed to add feed URL: $e'));
+    switch (existsResult) {
+      case Error():
+        return Result.error(
+          Exception('Failed to check if URL exists: ${existsResult.error}'),
+        );
+      case Ok():
+        if (existsResult.value) {
+          return Result.ok(Exception('This feed URL already exists'));
+        }
     }
+
+    final feedUrl = FeedUrl(
+      id: const Uuid().v4(),
+      url: form.url,
+      name: form.name,
+    );
+
+    final result = await _feedUrlRepository.addFeedUrl(feedUrl);
+
+    switch (result) {
+      case Error():
+        return Result.error(result.error);
+      case Ok():
+        break; // Continue to reload the list
+    }
+    load.execute(); // Refresh the list
+    return Result.ok(null);
   }
 
   /// Remove a feed URL

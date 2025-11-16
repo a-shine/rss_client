@@ -2,20 +2,20 @@ import '../../../domain/models/feed.dart';
 import '../../../domain/models/feed_item.dart';
 import '../../../domain/models/feed_url.dart';
 import '../../../utils/result.dart';
-import '../../services/feed_url_local_storage_service/feed_url_local_storage_service.dart';
 import '../../services/rss_feed_http_service/rss_feed_http_service.dart';
+import '../feed_url_repository/feed_url_repository.dart';
 import 'rss_feed_repository.dart';
 
 class RssFeedRepositoryImpl implements RssFeedRepository {
   final RssFeedHttpService _service;
-  final FeedUrlLocalStorageService _feedUrlService;
+  final FeedUrlRepository _feedUrlRepository;
 
-  RssFeedRepositoryImpl(this._service, this._feedUrlService);
+  RssFeedRepositoryImpl(this._service, this._feedUrlRepository);
 
   @override
   Future<Result<List<Feed>>> fetchAllFeeds() async {
     try {
-      final feedUrlsResult = await _feedUrlService.getFeedUrls();
+      final feedUrlsResult = await _feedUrlRepository.getFeedUrls();
 
       switch (feedUrlsResult) {
         case Error():
