@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -19,6 +20,7 @@ import 'data/services/local_sqllite_service/models/feed_url_sql_model.dart';
 import 'data/services/rss_feed_http_service/rss_feed_http_service.dart';
 import 'data/services/supabase_auth_service/supabase_auth_service.dart';
 import 'data/services/supabase_postgres_service/supabase_postgres_service.dart';
+import 'firebase_options.dart';
 import 'ui/app/app.dart';
 
 const supabaseUrl = 'https://rkwdlmvitmapcbqzkcov.supabase.co';
@@ -27,6 +29,8 @@ const supabaseKey =
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Only do this if not on web
   Database? db;

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "784537116270",
+    "project_id": "alastair-reader",
+    "storage_bucket": "alastair-reader.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:784537116270:android:dc336713ea04d50749107f",
+        "android_client_info": {
+          "package_name": "com.example.rss_client"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjAJixHMGKM54GmTibnFR7U9-d8-RbpNs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:784537116270:android:a2c5abf70756445149107f",
+        "android_client_info": {
+          "package_name": "org.ashine.alastair"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjAJixHMGKM54GmTibnFR7U9-d8-RbpNs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

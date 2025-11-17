@@ -1,0 +1,41 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "alastair-reader",
+                    "appId": "1:784537116270:android:dc336713ea04d50749107f",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "ios": {
+                "default": {
+                    "projectId": "alastair-reader",
+                    "appId": "1:784537116270:ios:ab48eb8213cebdee49107f",
+                    "uploadDebugSymbols": false,
+                    "fileOutput": "ios/Runner/GoogleService-Info.plist"
+                }
+            },
+            "macos": {
+                "default": {
+                    "projectId": "alastair-reader",
+                    "appId": "1:784537116270:ios:ab48eb8213cebdee49107f",
+                    "uploadDebugSymbols": false,
+                    "fileOutput": "macos/Runner/GoogleService-Info.plist"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "alastair-reader",
+                    "configurations": {
+                        "android": "1:784537116270:android:dc336713ea04d50749107f",
+                        "ios": "1:784537116270:ios:ab48eb8213cebdee49107f",
+                        "macos": "1:784537116270:ios:ab48eb8213cebdee49107f",
+                        "web": "1:784537116270:web:59c18a1671b0194749107f",
+                        "windows": "1:784537116270:web:96c4dd826defc2d349107f"
+                    }
+                }
+            }
+        }
+    }
+}
