@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for network requests to Supabase and other APIs -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    
     <application
         android:label="rss_client"
         android:name="${applicationName}"
